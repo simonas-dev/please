@@ -106,26 +106,72 @@ class OllamaWrapper
   end
   
   def call_ollama(model, prompt)
-    puts "Calling ollama with model: #{model}"
+    puts "\e[2mCalling ollama with model: #{model}\e[0m"
+    puts
+    
+    start_time = Time.now
+    spinner_active = true
+    first_output = true
+    
+    # Start spinner in background thread
+    spinner_thread = Thread.new do
+      spinner_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+      spinner_index = 0
+      
+      while spinner_active
+        elapsed = Time.now - start_time
+        print "\r\e[2m#{spinner_chars[spinner_index]} Thinking... (#{format('%.1f', elapsed)}s)\e[0m"
+        $stdout.flush
+        sleep 0.1
+        spinner_index = (spinner_index + 1) % spinner_chars.length
+      end
+    end
     
     # Use Open3 to call ollama and stream the output
     Open3.popen2e("ollama", "run", model, prompt) do |stdin, stdout_err, wait_thread|
       stdin.close
       
       stdout_err.each_line do |line|
+        if first_output
+          # Stop spinner on first output
+          spinner_active = false
+          spinner_thread.join
+          
+          thinking_time = Time.now - start_time
+          print "\r" + " " * 50 + "\r"  # Clear spinner line
+          puts "\e[2m Thought for #{format('%.1f', thinking_time)}s\e[0m"
+          puts "\e[2m─" * 60 + "\e[0m"
+          puts
+          first_output = false
+        end
+        
         print line
       end
       
       exit_status = wait_thread.value
       unless exit_status.success?
-        puts "\nError: ollama command failed with exit code #{exit_status.exitstatus}"
+        spinner_active = false
+        spinner_thread.join if spinner_thread.alive?
+        puts "\n\e[2mError: ollama command failed with exit code #{exit_status.exitstatus}\e[0m"
         return false
       end
     end
     
+    # Ensure spinner is stopped
+    spinner_active = false
+    spinner_thread.join if spinner_thread.alive?
+    
+    total_time = Time.now - start_time
+    puts
+    puts "\e[2m─" * 60 + "\e[0m"
+    puts "\e[2m  Total time: #{format('%.1f', total_time)}s\e[0m"
+    puts 
     true
   rescue Errno::ENOENT
-    puts "Error: ollama command not found. Please make sure ollama is installed and in your PATH."
+    spinner_active = false
+    spinner_thread.join if spinner_thread.alive?
+    puts "\e[2mError: ollama command not found. Please make sure ollama is installed and in your PATH.\e[0m"
+    puts 
     false
   end
 end
