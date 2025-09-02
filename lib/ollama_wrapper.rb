@@ -150,6 +150,30 @@ class OllamaWrapper
     MODEL_CONTEXT_LIMITS['default']
   end
   
+  def get_ollama_ram_usage
+    # Use ps to find all ollama processes and sum their RSS (memory usage)
+    output = `ps -A -o pid,rss,comm | grep ollama | grep -v grep 2>/dev/null`.strip
+    return "N/A" if output.empty?
+    
+    total_ram_kb = 0
+    output.split("\n").each do |line|
+      parts = line.strip.split
+      next if parts.length < 3
+      
+      rss_kb = parts[1].to_i
+      total_ram_kb += rss_kb if rss_kb > 0
+    end
+    
+    if total_ram_kb > 0
+      ram_gb = (total_ram_kb / 1024.0 / 1024.0).round(2)
+      "#{ram_gb}GB"
+    else
+      "N/A"
+    end
+  rescue
+    "N/A"
+  end
+
   def call_ollama(model, prompt)
     puts "\e[2mCalling ollama with model: #{model}\e[0m"
     puts
@@ -158,6 +182,15 @@ class OllamaWrapper
     spinner_active = true
     first_output = true
     in_thinking_block = false
+    ram_monitor_active = true
+    
+    # Start RAM monitoring thread
+    ram_monitor_thread = Thread.new do
+      while ram_monitor_active
+        ram_usage = get_ollama_ram_usage
+        sleep 2  # Check every 2 seconds
+      end
+    end
     
     # Start spinner in background thread
     spinner_thread = Thread.new do
@@ -166,7 +199,8 @@ class OllamaWrapper
       
       while spinner_active
         elapsed = Time.now - start_time
-        print "\r\e[2m#{spinner_chars[spinner_index]} Thinking... (#{format('%.1f', elapsed)}s)\e[0m"
+        ram_usage = get_ollama_ram_usage
+        print "\r\e[2m#{spinner_chars[spinner_index]} Thinking... (#{format('%.1f', elapsed)}s) | RAM: #{ram_usage}\e[0m"
         $stdout.flush
         sleep 0.1
         spinner_index = (spinner_index + 1) % spinner_chars.length
@@ -184,8 +218,9 @@ class OllamaWrapper
           spinner_thread.join
           
           thinking_time = Time.now - start_time
-          print "\r" + " " * 50 + "\r"  # Clear spinner line
-          puts "\e[2m Thought for #{format('%.1f', thinking_time)}s\e[0m"
+          final_ram = get_ollama_ram_usage
+          print "\r" + " " * 80 + "\r"  # Clear spinner line
+          puts "\e[2m Thought for #{format('%.1f', thinking_time)}s | RAM: #{final_ram}\e[0m"
           puts "\e[2m─" * 60 + "\e[0m"
           puts
           first_output = false
@@ -208,25 +243,36 @@ class OllamaWrapper
       exit_status = wait_thread.value
       unless exit_status.success?
         spinner_active = false
+        ram_monitor_active = false
         spinner_thread.join if spinner_thread.alive?
+        ram_monitor_thread.join if ram_monitor_thread.alive? rescue nil
         puts "\n\e[2mError: ollama command failed with exit code #{exit_status.exitstatus}\e[0m"
         return false
       end
     end
     
-    # Ensure spinner is stopped
+    # Ensure spinner and RAM monitor are stopped
     spinner_active = false
+    ram_monitor_active = false
     spinner_thread.join if spinner_thread.alive?
+    ram_monitor_thread.join if ram_monitor_thread.alive?
     
     total_time = Time.now - start_time
     puts
     puts "\e[2m─" * 60 + "\e[0m"
     puts "\e[2m  Total time: #{format('%.1f', total_time)}s\e[0m"
     puts 
+    
+    # Stop the model to free up RAM
+    puts "\e[2mStopping model to free RAM...\e[0m"
+    system("ollama", "stop", model)
+    
     true
   rescue Errno::ENOENT
     spinner_active = false
+    ram_monitor_active = false
     spinner_thread.join if spinner_thread.alive?
+    ram_monitor_thread.join if ram_monitor_thread.alive? rescue nil
     puts "\e[2mError: ollama command not found. Please make sure ollama is installed and in your PATH.\e[0m"
     puts 
     false
