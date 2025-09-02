@@ -153,7 +153,21 @@ class OllamaWrapper
   def get_ollama_ram_usage
     # Use ps to find all ollama processes and sum their RSS (memory usage)
     output = `ps -A -o pid,rss,comm | grep ollama | grep -v grep 2>/dev/null`.strip
-    return "N/A" if output.empty?
+    
+    # Get free physical memory from vm_stat
+    vm_stat = `vm_stat 2>/dev/null`
+    page_size = 4096  # Default macOS page size
+    free_ram_gb = 0
+    
+    if vm_stat.include?("Pages free:")
+      # Parse vm_stat output to get free RAM
+      pages_free = vm_stat.match(/Pages free:\s+(\d+)/)[1].to_i rescue 0
+      free_ram_gb = (pages_free * page_size / 1024.0 / 1024.0 / 1024.0).round(2)
+    end
+    
+    if output.empty?
+      return "0GB (#{free_ram_gb}GB free)"
+    end
     
     total_ram_kb = 0
     output.split("\n").each do |line|
@@ -166,9 +180,9 @@ class OllamaWrapper
     
     if total_ram_kb > 0
       ram_gb = (total_ram_kb / 1024.0 / 1024.0).round(2)
-      "#{ram_gb}GB"
+      "#{ram_gb}GB (#{free_ram_gb}GB free)"
     else
-      "N/A"
+      "0GB (#{free_ram_gb}GB free)"
     end
   rescue
     "N/A"
