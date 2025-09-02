@@ -1,0 +1,62 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/ollama_wrapper'
+
+def show_usage
+  puts <<~USAGE
+    Ollama Wrapper - A library for managing Ollama prompt aliases
+    
+    Usage:
+      please <alias_name> [additional_args...]     - Run a prompt alias
+      please list                                  - List all available aliases
+      please add <name> <model> "<prompt>" [desc]  - Add a new alias
+      please remove <name>                         - Remove an alias
+      please help                                  - Show this help
+    
+    Examples:
+      please write_scope_of_impact                 - Run the scope of impact analysis
+      please list                                  - Show all available prompt aliases
+      please add my_prompt llama2 "Explain this code" "Code explanation"
+  USAGE
+end
+
+if ARGV.empty? || ARGV[0] == 'help' || ARGV[0] == '--help' || ARGV[0] == '-h'
+  show_usage
+  exit 0
+end
+
+wrapper = OllamaWrapper.new
+
+case ARGV[0]
+when 'list'
+  wrapper.list_aliases
+when 'add'
+  if ARGV.length < 4
+    puts "Error: add requires at least 3 arguments: name, model, and prompt"
+    puts "Usage: please add <name> <model> \"<prompt>\" [description]"
+    exit 1
+  end
+  
+  name = ARGV[1]
+  model = ARGV[2]
+  prompt = ARGV[3]
+  description = ARGV[4] if ARGV.length > 4
+  
+  wrapper.add_alias(name, model, prompt, description)
+when 'remove'
+  if ARGV.length < 2
+    puts "Error: remove requires an alias name"
+    puts "Usage: please remove <name>"
+    exit 1
+  end
+  
+  wrapper.remove_alias(ARGV[1])
+else
+  # Run the specified alias with any additional arguments
+  alias_name = ARGV[0]
+  additional_args = ARGV[1..-1] || []
+  
+  unless wrapper.run(alias_name, *additional_args)
+    exit 1
+  end
+end
