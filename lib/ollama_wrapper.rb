@@ -159,18 +159,18 @@ class OllamaWrapper
     safe_limit = (context_limit * 0.8).to_i
     
     if estimated_tokens > safe_limit
-      puts "\e[2m   Warning: Prompt is large (~#{estimated_tokens} tokens)\e[0m"
-      puts "\e[2m   Model '#{model}' context limit: #{context_limit} tokens\e[0m"
-      puts "\e[2m   Recommended max: #{safe_limit} tokens (80% of limit)\e[0m"
+      puts "\e[2mWarning: Prompt is large (~#{estimated_tokens} tokens)\e[0m"
+      puts "\e[2m  Model '#{model}' context limit: #{context_limit} tokens\e[0m"
+      puts "\e[2m  Recommended max: #{safe_limit} tokens (80% of limit)\e[0m"
       puts
       
       if estimated_tokens > context_limit
-        puts "\e[91m Error: Prompt exceeds model context limit!\e[0m"
-        puts "\e[91m   This will likely fail or be truncated.\e[0m"
+        puts "\e[91mError: Prompt exceeds model context limit!\e[0m"
+        puts "\e[91m  This will likely fail or be truncated.\e[0m"
         puts
         return true
       else
-        puts "\e[2m   Proceeding anyway... (may work but watch for truncation)\e[0m"
+        puts "\e[2m  Proceeding anyway... (may work but watch for truncation)\e[0m"
         puts
       end
     end
@@ -188,9 +188,9 @@ class OllamaWrapper
     end
     
     # Unknown model - show warning and use conservative fallback
-    puts "\e[2m   Warning: Unknown model '#{model}'\e[0m"
-    puts "\e[2m   Using conservative context limit: #{MODEL_CONTEXT_LIMITS['default']} tokens\e[0m"
-    puts "\e[2m   Model may actually support more or fewer tokens\e[0m"
+    puts "\e[2mWarning: Unknown model '#{model}'\e[0m"
+    puts "\e[2m  Using conservative context limit: #{MODEL_CONTEXT_LIMITS['default']} tokens\e[0m"
+    puts "\e[2m  Model may actually support more or fewer tokens\e[0m"
     puts
     
     MODEL_CONTEXT_LIMITS['default']
