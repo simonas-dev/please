@@ -1,10 +1,9 @@
 class Please < Formula
   desc "Ruby wrapper for Ollama with built-in prompts"
   homepage "https://github.com/simonas-dev/please"
-  url "https://github.com/simonas-dev/please/archive/v0.1.0.tar.gz"
-  sha256 "" # Calculate with: shasum -a 256 please-v0.1.0.tar.gz
+  url "https://github.com/simonas-dev/please.git", branch: "main"
+  version "0.1.0"
   license "MIT"
-  head "https://github.com/simonas-dev/please.git", branch: "main"
 
   depends_on "ruby"
   depends_on "ollama"
