@@ -1,8 +1,10 @@
-class Please < Formula
+require_relative "../version"
+
+class OllamaPlease < Formula
   desc "Ruby wrapper for Ollama with built-in prompts"
   homepage "https://github.com/simonas-dev/please"
-  url "https://github.com/simonas-dev/please.git", branch: "main"
-  version "0.1.0"
+  url "https://github.com/simonas-dev/please.git", tag: PleaseConsts::VERSION
+  version PleaseConsts::VERSION
   license "MIT"
 
   depends_on "ruby"
@@ -13,10 +15,10 @@ class Please < Formula
     lib.install Dir["lib/*"]
     
     # Install the binary
-    bin.install "bin/please"
+    bin.install "bin/pls"
     
     # Update the binary to use the installed lib path
-    inreplace bin/"please", 
+    inreplace bin/"pls", 
               "require_relative '../lib/ollama_wrapper'",
               "require_relative '#{lib}/ollama_wrapper'"
   end
@@ -29,7 +31,7 @@ class Please < Formula
   end
 
   test do
-    assert_match "Please - Ollama prompt runner", shell_output("#{bin}/please help")
-    assert_match "list", shell_output("#{bin}/please help")
+    assert_match "Please - Ollama prompt runner", shell_output("#{bin}/pls help")
+    assert_match "list", shell_output("#{bin}/pls help")
   end
 end

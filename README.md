@@ -17,63 +17,24 @@ A Ruby wrapper for Ollama with built-in prompts. Run predefined AI prompts with 
 
 ```bash
 # Add the tap
-brew tap simonas-dev/please
+brew tap simonas-dev/please https://github.com/simonas-dev/please.git
 
 # Install the package
-brew install please
-```
-
-### Via RubyGems
-
-```bash
-gem install please
-```
-
-### Manual Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd please
-```
-
-2. Install dependencies:
-```bash
-bundle install
-```
-
-3. Make executable:
-```bash
-chmod +x bin/please
+brew install ollama-please
 ```
 
 ## Usage
 
-### Running Prompts
-
-```bash
-# Run the built-in scope of impact analysis
-please lastCommitScope
+```
+# Generates QA scope of impact analysis by reading `git show` output.
+pls lastCommitScope
 
 # List all available prompts
-please list
-```
+pls list
 
-### Help
-
-```bash
 # Show help
-please help
+pls help
 ```
-
-### Built-in Prompts
-
-- **`lastCommitScope`**: Generates QA scope of impact analysis from git diff using `gpt-oss:20b`
-
-## Configuration
-
-- **Built-in prompts**: Defined in `default_prompts.yml`
-- **Command substitution**: Use `$(git diff HEAD~1)` or any shell command in prompts
 
 ## Adding New Prompts
 
@@ -94,7 +55,7 @@ newPrompt:
 ## Output Example
 
 ```bash
-$ please lastCommitScope
+$ pls lastCommitScope
 
 Calling ollama with model: gpt-oss:20b (context: 8192 tokens, prompt: ~1250 tokens)
 
@@ -112,19 +73,6 @@ Thinking... (3.7s)
 
 - Ruby >= 2.7.0
 - [Ollama](https://ollama.ai) installed and available in PATH
-
-## Development
-
-```bash
-# Install development dependencies
-bundle install
-
-# Build gem
-gem build please.gemspec
-
-# Install locally
-gem install please-0.1.0.gem
-```
 
 ## License
 

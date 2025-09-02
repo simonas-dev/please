@@ -16,11 +16,11 @@ git clone https://github.com/simonas-dev/homebrew-please.git
 cd homebrew-please
 
 # Copy the formula from this repository
-cp /path/to/please/Formula/please.rb ./Formula/please.rb
+cp /path/to/please/Formula/ollama-please.rb ./Formula/ollama-please.rb
 
 # Create initial commit
-git add Formula/please.rb
-git commit -m "Add please formula"
+git add Formula/ollama-please.rb
+git commit -m "Add ollama-please formula"
 git push origin main
 ```
 
@@ -58,7 +58,7 @@ Once the tap is set up, users can install with:
 
 ```bash
 brew tap simonas-dev/please
-brew install please
+brew install ollama-please
 ```
 
 ## Testing the Formula
@@ -67,6 +67,6 @@ Test locally before publishing:
 
 ```bash
 # In the tap repository
-brew install --build-from-source ./Formula/please.rb
-brew test please
+brew install --build-from-source ./Formula/ollama-please.rb
+brew test ollama-please
 ```

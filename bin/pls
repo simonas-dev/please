@@ -1,19 +1,20 @@
 #!/usr/bin/env ruby
 
 require_relative '../lib/ollama_wrapper'
+require_relative '../version'
 
 def show_usage
   puts <<~USAGE
-    Please - Ollama prompt runner with built-in prompts
+    Please v#{PleaseConsts::VERSION} - Ollama prompt runner with built-in prompts
     
     Usage:
       please <alias_name> [additional_args...]     - Run a prompt alias
-      please list                                  - List all available aliases
-      please help                                  - Show this help
+      pls list                                     - List all available aliases
+      pls help                                     - Show this help
     
     Examples:
-      please lastCommitScope                       - Run the scope of impact analysis
-      please list                                  - Show all available prompt aliases
+      pls lastCommitScope                          - Run the scope of impact analysis
+      pls list                                     - Show all available prompt aliases
   USAGE
 end
 

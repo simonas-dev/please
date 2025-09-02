@@ -1,6 +1,8 @@
+require_relative "version"
+
 Gem::Specification.new do |spec|
   spec.name          = "please"
-  spec.version       = "0.1.0"
+  spec.version       = PleaseConsts::VERSION
   spec.authors       = ["Simonas Sankauskas"]
   spec.email         = ["hello@simonas.dev"]
 
@@ -11,7 +13,7 @@ Gem::Specification.new do |spec|
 
   spec.files         = Dir["lib/**/*", "bin/*", "default_prompts.yml", "README.md", "LICENSE"]
   spec.bindir        = "bin"
-  spec.executables   = ["please"]
+  spec.executables   = ["pls"]
   spec.require_paths = ["lib"]
 
   spec.required_ruby_version = ">= 2.7.0"
