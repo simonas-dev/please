@@ -13,6 +13,24 @@ A Ruby wrapper for Ollama with built-in prompts. Run predefined AI prompts with 
 
 ## Installation
 
+### Via Homebrew (Recommended)
+
+```bash
+# Add the tap
+brew tap simonas-dev/please
+
+# Install the package
+brew install please
+```
+
+### Via RubyGems
+
+```bash
+gem install please
+```
+
+### Manual Installation
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>
@@ -35,17 +53,17 @@ chmod +x bin/please
 
 ```bash
 # Run the built-in scope of impact analysis
-./bin/please lastCommitScope
+please lastCommitScope
 
 # List all available prompts
-./bin/please list
+please list
 ```
 
 ### Help
 
 ```bash
 # Show help
-./bin/please help
+please help
 ```
 
 ### Built-in Prompts
@@ -76,7 +94,7 @@ newPrompt:
 ## Output Example
 
 ```bash
-$ ./bin/please lastCommitScope
+$ please lastCommitScope
 
 Calling ollama with model: gpt-oss:20b (context: 8192 tokens, prompt: ~1250 tokens)
 
