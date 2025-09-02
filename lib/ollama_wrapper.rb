@@ -3,7 +3,7 @@ require 'fileutils'
 require 'open3'
 
 class OllamaWrapper
-  DEFAULT_PROMPTS_FILE = File.join(File.dirname(__FILE__), "..", "default_prompts.yml")
+  DEFAULT_PROMPTS_FILE = File.join(File.dirname(__FILE__), "default_prompts.yml")
   
   # Common model context limits (approximate tokens)
   MODEL_CONTEXT_LIMITS = {
