@@ -1,4 +1,4 @@
-require_relative "version"
+require_relative "lib/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "please"
@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   # spec.homepage      = "https://github.com/username/ollama_wrapper"
   spec.license       = "MIT"
 
-  spec.files         = Dir["lib/**/*", "bin/*", "default_prompts.yml", "README.md", "LICENSE"]
+  spec.files         = Dir["lib/**/*", "bin/*", "README.md", "LICENSE"]
   spec.bindir        = "bin"
   spec.executables   = ["pls"]
   spec.require_paths = ["lib"]

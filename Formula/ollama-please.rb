@@ -1,4 +1,4 @@
-require_relative "../version"
+require_relative "../lib/version"
 
 class OllamaPlease < Formula
   desc "Ruby wrapper for Ollama with built-in prompts"

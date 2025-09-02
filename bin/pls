@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require_relative '../lib/ollama_wrapper'
-require_relative '../version'
+require_relative '../lib/version'
 
 def show_usage
   puts <<~USAGE
