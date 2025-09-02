@@ -7,6 +7,44 @@ class OllamaWrapper
   PROMPTS_FILE = File.join(CONFIG_DIR, "prompts.yml")
   DEFAULT_PROMPTS_FILE = File.join(File.dirname(__FILE__), "..", "default_prompts.yml")
   
+  # Common model context limits (approximate tokens)
+  MODEL_CONTEXT_LIMITS = {
+    'llama2' => 4096,
+    'llama2:7b' => 4096,
+    'llama2:13b' => 4096,
+    'llama2:70b' => 4096,
+    'llama3' => 8192,
+    'llama3:8b' => 8192,
+    'llama3:70b' => 8192,
+    'llama3.1' => 128000,
+    'llama3.1:8b' => 128000,
+    'llama3.1:70b' => 128000,
+    'llama3.1:405b' => 128000,
+    'llama3.2' => 128000,
+    'llama3.2:1b' => 128000,
+    'llama3.2:3b' => 128000,
+    'codellama' => 16384,
+    'codellama:7b' => 16384,
+    'codellama:13b' => 16384,
+    'codellama:34b' => 16384,
+    'mistral' => 8192,
+    'mistral:7b' => 8192,
+    'mixtral' => 32768,
+    'mixtral:8x7b' => 32768,
+    'qwen' => 8192,
+    'qwen:7b' => 8192,
+    'qwen:14b' => 8192,
+    'qwen:72b' => 8192,
+    'gpt-oss:20b' => 8192,  # Conservative estimate
+    'gemma' => 8192,
+    'gemma:2b' => 8192,
+    'gemma:7b' => 8192,
+    'phi3' => 4096,
+    'phi3:mini' => 4096,
+    'yi' => 4096,
+    'default' => 4096  # Fallback
+  }.freeze
+  
   def initialize
     ensure_config_dir
     @prompts = load_prompts
@@ -29,6 +67,11 @@ class OllamaWrapper
     # Add any additional arguments to the prompt
     if args.any?
       expanded_prompt += "\n\n" + args.join(" ")
+    end
+    
+    # Check prompt size before calling ollama
+    if prompt_too_large?(model, expanded_prompt)
+      return false
     end
     
     call_ollama(model, expanded_prompt)
@@ -103,6 +146,54 @@ class OllamaWrapper
       result = `#{command}`.strip
       result
     end
+  end
+  
+  def prompt_too_large?(model, prompt)
+    # Rough token estimation: ~4 characters per token (conservative)
+    estimated_tokens = prompt.length / 4
+    
+    # Get context limit for this model
+    context_limit = get_model_context_limit(model)
+    
+    # Use 80% of context limit as safe threshold
+    safe_limit = (context_limit * 0.8).to_i
+    
+    if estimated_tokens > safe_limit
+      puts "\e[2m   Warning: Prompt is large (~#{estimated_tokens} tokens)\e[0m"
+      puts "\e[2m   Model '#{model}' context limit: #{context_limit} tokens\e[0m"
+      puts "\e[2m   Recommended max: #{safe_limit} tokens (80% of limit)\e[0m"
+      puts
+      
+      if estimated_tokens > context_limit
+        puts "\e[91m Error: Prompt exceeds model context limit!\e[0m"
+        puts "\e[91m   This will likely fail or be truncated.\e[0m"
+        puts
+        return true
+      else
+        puts "\e[2m   Proceeding anyway... (may work but watch for truncation)\e[0m"
+        puts
+      end
+    end
+    
+    false
+  end
+  
+  def get_model_context_limit(model)
+    # Try exact match first
+    return MODEL_CONTEXT_LIMITS[model] if MODEL_CONTEXT_LIMITS[model]
+    
+    # Try partial matches for models with tags
+    MODEL_CONTEXT_LIMITS.each do |model_pattern, limit|
+      return limit if model.start_with?(model_pattern.split(':')[0])
+    end
+    
+    # Unknown model - show warning and use conservative fallback
+    puts "\e[2m   Warning: Unknown model '#{model}'\e[0m"
+    puts "\e[2m   Using conservative context limit: #{MODEL_CONTEXT_LIMITS['default']} tokens\e[0m"
+    puts "\e[2m   Model may actually support more or fewer tokens\e[0m"
+    puts
+    
+    MODEL_CONTEXT_LIMITS['default']
   end
   
   def call_ollama(model, prompt)
