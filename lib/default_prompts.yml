@@ -30,5 +30,5 @@ lastCommitScope:
     - specific notes about impact.
     ```
 
-    $(git diff HEAD~1)
+    $(git show)
   description: "Generate QA scope of impact analysis from git diff"
