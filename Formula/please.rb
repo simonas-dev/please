@@ -9,29 +9,15 @@ class Please < Formula
   depends_on "ollama"
 
   def install
-    # Install the gem files
-    lib.install Dir["lib/*"]
+    # Install everything to preserve relative paths
+    prefix.install Dir["*"]
     
-    # Install the binary
-    bin.install "bin/please"
-    
-    # Install configuration
-    etc.install "default_prompts.yml" => "please/default_prompts.yml"
-    
-    # Make sure the binary is executable
-    chmod 0755, bin/"please"
-    
-    # Update the binary to use the installed lib path
-    inreplace bin/"please", 
-              "require_relative '../lib/ollama_wrapper'",
-              "require_relative '#{lib}/ollama_wrapper'"
+    # Link the executable
+    bin.install_symlink prefix/"bin/please"
   end
 
   def caveats
-    <<~EOS
-      The default prompts configuration is installed at:
-        #{etc}/please/default_prompts.yml
-      
+    <<~EOS      
       Make sure Ollama is installed and running to use this tool.
       Visit https://ollama.ai for Ollama installation instructions.
     EOS
