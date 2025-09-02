@@ -9,11 +9,16 @@ class Please < Formula
   depends_on "ollama"
 
   def install
-    # Install everything to preserve relative paths
-    prefix.install Dir["*"]
+    # Install the library files including the YAML file
+    lib.install Dir["lib/*"]
     
-    # Link the executable
-    bin.install_symlink prefix/"bin/please"
+    # Install the binary
+    bin.install "bin/please"
+    
+    # Update the binary to use the installed lib path
+    inreplace bin/"please", 
+              "require_relative '../lib/ollama_wrapper'",
+              "require_relative '#{lib}/ollama_wrapper'"
   end
 
   def caveats
