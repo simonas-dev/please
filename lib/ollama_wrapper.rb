@@ -85,11 +85,6 @@ class OllamaWrapper
   private
   
   def load_default_prompts
-    puts "DEBUG: Looking for prompts file at: #{DEFAULT_PROMPTS_FILE}"
-    puts "DEBUG: File exists? #{File.exist?(DEFAULT_PROMPTS_FILE)}"
-    puts "DEBUG: __FILE__ is: #{__FILE__}"
-    puts "DEBUG: File.dirname(__FILE__) is: #{File.dirname(__FILE__)}"
-    
     if File.exist?(DEFAULT_PROMPTS_FILE)
       YAML.load_file(DEFAULT_PROMPTS_FILE) || {}
     else
