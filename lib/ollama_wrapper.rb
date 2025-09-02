@@ -3,7 +3,7 @@ require 'fileutils'
 require 'open3'
 
 class OllamaWrapper
-  DEFAULT_PROMPTS_FILE = File.join(File.dirname(__FILE__), "default_prompts.yml")
+  DEFAULT_PROMPTS_FILE = File.expand_path("default_prompts.yml", File.dirname(__FILE__))
   
   # Common model context limits (approximate tokens)
   MODEL_CONTEXT_LIMITS = {
@@ -85,10 +85,15 @@ class OllamaWrapper
   private
   
   def load_default_prompts
+    puts "DEBUG: Looking for prompts file at: #{DEFAULT_PROMPTS_FILE}"
+    puts "DEBUG: File exists? #{File.exist?(DEFAULT_PROMPTS_FILE)}"
+    puts "DEBUG: __FILE__ is: #{__FILE__}"
+    puts "DEBUG: File.dirname(__FILE__) is: #{File.dirname(__FILE__)}"
+    
     if File.exist?(DEFAULT_PROMPTS_FILE)
       YAML.load_file(DEFAULT_PROMPTS_FILE) || {}
     else
-      puts "Warning: default_prompts.yml not found"
+      puts "Warning: default_prompts.yml not found at #{DEFAULT_PROMPTS_FILE}"
       {}
     end
   end
