@@ -1,12 +1,14 @@
 # Please
 
-A Ruby wrapper for Ollama with prompt library management. Create reusable prompts with short aliases for efficient AI interactions.
+A Ruby wrapper for Ollama with built-in prompts. Run predefined AI prompts with short aliases for efficient interactions.
 
 ## Features
 
-- **Prompt Library**: Store prompts in YAML files with short aliases
+- **Built-in Prompts**: Predefined prompts for common tasks
 - **Command Substitution**: Support for `$(command)` syntax in prompts
 - **Direct Ollama Integration**: Streams output directly from ollama
+- **Context Size Validation**: Warns when prompts exceed model limits
+- **Progress Indicators**: Shows thinking time and total execution time
 - **User-Friendly CLI**: Simple commands for managing and running prompts
 
 ## Installation
@@ -33,39 +35,34 @@ chmod +x bin/please
 
 ```bash
 # Run the built-in scope of impact analysis
-./bin/please write_scope_of_impact
+./bin/please lastCommitScope
 
 # List all available prompts
 ./bin/please list
 ```
 
-### Managing Prompts
+### Help
 
 ```bash
-# Add a new prompt alias
-./bin/please add my_prompt llama2 "Explain this code in simple terms" "Code explanation helper"
-
-# Remove a prompt
-./bin/please remove my_prompt
-
 # Show help
 ./bin/please help
 ```
 
 ### Built-in Prompts
 
-- **`write_scope_of_impact`**: Generates QA scope of impact analysis from git diff using `gpt-oss:20b`
+- **`lastCommitScope`**: Generates QA scope of impact analysis from git diff using `gpt-oss:20b`
 
 ## Configuration
 
-- **Default prompts**: Defined in `default_prompts.yml`
-- **User prompts**: Stored in `~/.ollama_wrapper/prompts.yml`
+- **Built-in prompts**: Defined in `default_prompts.yml`
 - **Command substitution**: Use `$(git diff HEAD~1)` or any shell command in prompts
 
-## Example Prompt
+## Adding New Prompts
+
+To add new prompts, edit the `default_prompts.yml` file:
 
 ```yaml
-my_analysis:
+newPrompt:
   model: "llama2"
   prompt: |
     Analyze the following git changes and provide insights:
@@ -74,6 +71,23 @@ my_analysis:
     
     Focus on potential bugs and improvements.
   description: "Code change analysis"
+```
+
+## Output Example
+
+```bash
+$ ./bin/please lastCommitScope
+
+Calling ollama with model: gpt-oss:20b (context: 8192 tokens, prompt: ~1250 tokens)
+
+Thinking... (3.7s)
+ Thought for 3.7s
+────────────────────────────────────────────────────────────
+
+[Analysis results here...]
+
+────────────────────────────────────────────────────────────
+  Total time: 12.4s
 ```
 
 ## Requirements

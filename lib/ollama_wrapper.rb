@@ -3,8 +3,6 @@ require 'fileutils'
 require 'open3'
 
 class OllamaWrapper
-  CONFIG_DIR = File.expand_path("~/.ollama_wrapper")
-  PROMPTS_FILE = File.join(CONFIG_DIR, "prompts.yml")
   DEFAULT_PROMPTS_FILE = File.join(File.dirname(__FILE__), "..", "default_prompts.yml")
   
   # Common model context limits (approximate tokens)
@@ -46,8 +44,7 @@ class OllamaWrapper
   }.freeze
   
   def initialize
-    ensure_config_dir
-    @prompts = load_prompts
+    @prompts = load_default_prompts
   end
   
   def run(alias_name, *args)
@@ -84,39 +81,8 @@ class OllamaWrapper
     end
   end
   
-  def add_alias(name, model, prompt, description = nil)
-    @prompts[name] = {
-      'model' => model,
-      'prompt' => prompt,
-      'description' => description
-    }
-    save_prompts
-    puts "Added alias '#{name}' for model '#{model}'"
-  end
-  
-  def remove_alias(name)
-    if @prompts.delete(name)
-      save_prompts
-      puts "Removed alias '#{name}'"
-    else
-      puts "Alias '#{name}' not found"
-    end
-  end
   
   private
-  
-  def load_prompts
-    # Start with default prompts
-    prompts = load_default_prompts
-    
-    # Merge with user prompts if they exist
-    if File.exist?(PROMPTS_FILE)
-      user_prompts = YAML.load_file(PROMPTS_FILE) || {}
-      prompts.merge!(user_prompts)
-    end
-    
-    prompts
-  end
   
   def load_default_prompts
     if File.exist?(DEFAULT_PROMPTS_FILE)
@@ -125,18 +91,6 @@ class OllamaWrapper
       puts "Warning: default_prompts.yml not found"
       {}
     end
-  end
-  
-  def ensure_config_dir
-    FileUtils.mkdir_p(CONFIG_DIR) unless File.directory?(CONFIG_DIR)
-    # Don't create an empty prompts.yml file anymore - defaults come from default_prompts.yml
-  end
-  
-  def save_prompts
-    # Only save user-added prompts, not defaults
-    default_prompts = load_default_prompts
-    user_prompts = @prompts.reject { |key, _| default_prompts.key?(key) }
-    File.write(PROMPTS_FILE, user_prompts.to_yaml)
   end
   
   def expand_command_substitutions(prompt)
