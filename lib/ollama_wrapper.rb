@@ -157,6 +157,7 @@ class OllamaWrapper
     start_time = Time.now
     spinner_active = true
     first_output = true
+    in_thinking_block = false
     
     # Start spinner in background thread
     spinner_thread = Thread.new do
@@ -173,7 +174,7 @@ class OllamaWrapper
     end
     
     # Use Open3 to call ollama and stream the output
-    Open3.popen2e("ollama", "run", model, prompt) do |stdin, stdout_err, wait_thread|
+    Open3.popen2e("ollama", "run", "--hidethinking", model, prompt) do |stdin, stdout_err, wait_thread|
       stdin.close
       
       stdout_err.each_line do |line|
@@ -190,7 +191,18 @@ class OllamaWrapper
           first_output = false
         end
         
-        print line
+        # Check for thinking block markers
+        if line.match(/Thinking\.\.\./)
+          in_thinking_block = true
+          print "\e[2m#{line}\e[0m"
+        elsif line.match(/\.\.\.done thinking/)
+          print "\e[2m#{line}\e[0m"
+          in_thinking_block = false
+        elsif in_thinking_block
+          print "\e[2m#{line}\e[0m"
+        else
+          print line
+        end
       end
       
       exit_status = wait_thread.value
