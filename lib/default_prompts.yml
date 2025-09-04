@@ -47,10 +47,10 @@ releaseNotes:
 
   description: "Generate releas notes from git diff"
 
-testClaude:
+helloWorld:
   model: "claude"
   prompt: |
-    Hello! This is a test prompt to verify Claude integration is working correctly.
-    
-    Please respond with a brief confirmation that you received this message.
-  description: "Test Claude integration"
+    Write a poem about the world and how is saying hello to everyone. Be as ridiculous as possible.
+    The last person that the world says hi to is $(whoami).
+
+  description: "Run an prompt template example."
