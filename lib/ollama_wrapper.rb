@@ -1,6 +1,7 @@
 require 'yaml'
 require 'fileutils'
 require 'open3'
+require 'rouge'
 
 class OllamaWrapper
   DEFAULT_PROMPTS_FILE = File.expand_path("default_prompts.yml", File.dirname(__FILE__))
@@ -96,6 +97,15 @@ class OllamaWrapper
   
   
   private
+
+  def highlight_markdown(text)
+    formatter = Rouge::Formatters::Terminal256.new
+    lexer = Rouge::Lexers::Markdown.new
+    formatter.format(lexer.lex(text))
+  rescue
+    # Fallback to plain text if highlighting fails
+    text
+  end
   
   def claude_model?(model)
     model.downcase.include?('claude')
@@ -287,10 +297,11 @@ class OllamaWrapper
           elsif in_thinking_block
             print "\e[2m#{line}\e[0m"
           else
-            print line
+            print highlight_markdown(line)
           end
         else
-          print line
+          # Apply markdown highlighting to the output
+          print highlight_markdown(line)
         end
       end
       
