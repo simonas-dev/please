@@ -33,15 +33,15 @@ lastCommitScope:
     $(git show)
   description: "Generate release notes from git diff"
 releaseNotes:
-  model: "gemma3:4b"
+  model: "claude"
   prompt: |
-    Create product focused release notes from the log diff.
+    Create a changes report from the log diff.
 
-    Use bullet point formatting.
+    Group changes by JIRA ticket id (should come after refs in commit msg):
+    * List feature toggles that need to be enabled.
+    * List changes made.
 
-    List feature toggles that need to be enabled.
-
-    Don't process image. Don't read files.
+    Create product focused release notes that are formatted as a list of bullet points.
 
     A git diff below:
 

@@ -206,6 +206,11 @@ class OllamaWrapper
   end
 
   def execute_command_with_formatting(command_args, model, prompt)
+    # Calculate and display token/character count
+    char_count = prompt.length
+    estimated_tokens = char_count / 4
+    token_display = estimated_tokens >= 1000 ? "#{(estimated_tokens / 1000.0).round(1)}K" : estimated_tokens.to_s
+    puts "\e[2mPrompt size: #{token_display} tokens (~#{char_count} chars)\e[0m"
     puts "\e[2mCalling #{command_args[0]} with model: #{model}\e[0m"
     puts
     
