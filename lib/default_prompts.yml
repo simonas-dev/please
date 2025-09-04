@@ -1,5 +1,5 @@
 lastCommitScope:
-  model: "gemma3:4b"
+  model: "claude"
   prompt: |
     Based on the following git diff, create a scope of impact analysis for QA testing. Avoid being too specific on things that need to be regression tested. Assumptions might be wrong. Assume nothing. Do not give directions, but evaluate the scope affected.
 
@@ -31,7 +31,7 @@ lastCommitScope:
     ```
 
     $(git show)
-  description: "Generate release notes from git diff"
+  description: "Generate QA scope of impact analysis from git diff"
 releaseNotes:
   model: "claude"
   prompt: |
