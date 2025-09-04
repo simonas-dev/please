@@ -11,13 +11,11 @@ Gem::Specification.new do |spec|
   # spec.homepage      = "https://github.com/username/ollama_wrapper"
   spec.license       = "MIT"
 
-  spec.files         = Dir["lib/**/*", "bin/*", "README.md", "LICENSE"]
+  spec.files         = Dir["lib/**/*", "bin/*", "vendor/**/*", "README.md", "LICENSE"]
   spec.bindir        = "bin"
   spec.executables   = ["pls"]
-  spec.require_paths = ["lib"]
+  spec.require_paths = ["lib", "vendor/rouge/lib"]
 
   spec.required_ruby_version = ">= 2.6.0"
-  
-  spec.add_dependency "rouge", "~> 3.30.0"
   
 end

@@ -1,7 +1,7 @@
 require 'yaml'
 require 'fileutils'
 require 'open3'
-require 'rouge'
+require_relative '../vendor/rouge/lib/rouge'
 
 class OllamaWrapper
   DEFAULT_PROMPTS_FILE = File.expand_path("default_prompts.yml", File.dirname(__FILE__))
