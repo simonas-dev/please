@@ -40,6 +40,14 @@ class OllamaWrapper
     'phi3' => 4096,
     'phi3:mini' => 4096,
     'yi' => 4096,
+    # Claude models
+    'claude-3-haiku-20240307' => 200000,
+    'claude-3-sonnet-20240229' => 200000,
+    'claude-3-opus-20240229' => 200000,
+    'claude-3-5-sonnet-20240620' => 200000,
+    'claude-3-5-sonnet-20241022' => 200000,
+    'claude-3-5-haiku-20241022' => 200000,
+    'claude' => 200000,  # Generic claude alias
     'default' => 4096  # Fallback
   }.freeze
   
@@ -71,7 +79,12 @@ class OllamaWrapper
       return false
     end
     
-    call_ollama(model, expanded_prompt)
+    # Route to appropriate command based on model
+    if claude_model?(model)
+      call_claude(model, expanded_prompt)
+    else
+      call_ollama(model, expanded_prompt)
+    end
   end
   
   def list_aliases
@@ -83,6 +96,10 @@ class OllamaWrapper
   
   
   private
+  
+  def claude_model?(model)
+    model.downcase.include?('claude')
+  end
   
   def load_default_prompts
     if File.exist?(DEFAULT_PROMPTS_FILE)
@@ -188,8 +205,8 @@ class OllamaWrapper
     "N/A"
   end
 
-  def call_ollama(model, prompt)
-    puts "\e[2mCalling ollama with model: #{model}\e[0m"
+  def execute_command_with_formatting(command_args, model, prompt)
+    puts "\e[2mCalling #{command_args[0]} with model: #{model}\e[0m"
     puts
     
     start_time = Time.now
@@ -198,12 +215,16 @@ class OllamaWrapper
     in_thinking_block = false
     ram_monitor_active = true
     
-    # Start RAM monitoring thread
-    ram_monitor_thread = Thread.new do
-      while ram_monitor_active
-        ram_usage = get_ollama_ram_usage
-        sleep 2  # Check every 2 seconds
+    # Start RAM monitoring thread (only for ollama)
+    ram_monitor_thread = if command_args[0] == "ollama"
+      Thread.new do
+        while ram_monitor_active
+          ram_usage = get_ollama_ram_usage
+          sleep 2  # Check every 2 seconds
+        end
       end
+    else
+      nil
     end
     
     # Start spinner in background thread
@@ -213,16 +234,20 @@ class OllamaWrapper
       
       while spinner_active
         elapsed = Time.now - start_time
-        ram_usage = get_ollama_ram_usage
-        print "\r\e[2m#{spinner_chars[spinner_index]} Thinking... (#{format('%.1f', elapsed)}s) | RAM: #{ram_usage}\e[0m"
+        if command_args[0] == "ollama"
+          ram_usage = get_ollama_ram_usage
+          print "\r\e[2m#{spinner_chars[spinner_index]} Thinking... (#{format('%.1f', elapsed)}s) | RAM: #{ram_usage}\e[0m"
+        else
+          print "\r\e[2m#{spinner_chars[spinner_index]} Thinking... (#{format('%.1f', elapsed)}s)\e[0m"
+        end
         $stdout.flush
         sleep 0.1
         spinner_index = (spinner_index + 1) % spinner_chars.length
       end
     end
     
-    # Use Open3 to call ollama and stream the output
-    Open3.popen2e("ollama", "run", "--hidethinking", model, prompt) do |stdin, stdout_err, wait_thread|
+    # Use Open3 to call command and stream the output
+    Open3.popen2e(*command_args) do |stdin, stdout_err, wait_thread|
       stdin.close
       
       stdout_err.each_line do |line|
@@ -232,23 +257,33 @@ class OllamaWrapper
           spinner_thread.join
           
           thinking_time = Time.now - start_time
-          final_ram = get_ollama_ram_usage
           print "\r" + " " * 80 + "\r"  # Clear spinner line
-          puts "\e[2m Thought for #{format('%.1f', thinking_time)}s | RAM: #{final_ram}\e[0m"
+          
+          if command_args[0] == "ollama"
+            final_ram = get_ollama_ram_usage
+            puts "\e[2m Thought for #{format('%.1f', thinking_time)}s | RAM: #{final_ram}\e[0m"
+          else
+            puts "\e[2m Thought for #{format('%.1f', thinking_time)}s\e[0m"
+          end
+          
           puts "\e[2m─" * 60 + "\e[0m"
           puts
           first_output = false
         end
         
-        # Check for thinking block markers
-        if line.match(/Thinking\.\.\./)
-          in_thinking_block = true
-          print "\e[2m#{line}\e[0m"
-        elsif line.match(/\.\.\.done thinking/)
-          print "\e[2m#{line}\e[0m"
-          in_thinking_block = false
-        elsif in_thinking_block
-          print "\e[2m#{line}\e[0m"
+        # Check for thinking block markers (ollama specific)
+        if command_args[0] == "ollama"
+          if line.match(/Thinking\.\.\./)
+            in_thinking_block = true
+            print "\e[2m#{line}\e[0m"
+          elsif line.match(/\.\.\.done thinking/)
+            print "\e[2m#{line}\e[0m"
+            in_thinking_block = false
+          elsif in_thinking_block
+            print "\e[2m#{line}\e[0m"
+          else
+            print line
+          end
         else
           print line
         end
@@ -259,8 +294,8 @@ class OllamaWrapper
         spinner_active = false
         ram_monitor_active = false
         spinner_thread.join if spinner_thread.alive?
-        ram_monitor_thread.join if ram_monitor_thread.alive? rescue nil
-        puts "\n\e[2mError: ollama command failed with exit code #{exit_status.exitstatus}\e[0m"
+        ram_monitor_thread.join if ram_monitor_thread && ram_monitor_thread.alive? rescue nil
+        puts "\n\e[2mError: #{command_args[0]} command failed with exit code #{exit_status.exitstatus}\e[0m"
         return false
       end
     end
@@ -269,7 +304,7 @@ class OllamaWrapper
     spinner_active = false
     ram_monitor_active = false
     spinner_thread.join if spinner_thread.alive?
-    ram_monitor_thread.join if ram_monitor_thread.alive?
+    ram_monitor_thread.join if ram_monitor_thread && ram_monitor_thread.alive?
     
     total_time = Time.now - start_time
     puts
@@ -277,18 +312,28 @@ class OllamaWrapper
     puts "\e[2m  Total time: #{format('%.1f', total_time)}s\e[0m"
     puts 
     
-    # Stop the model to free up RAM
-    puts "\e[2mStopping model to free RAM...\e[0m"
-    system("ollama", "stop", model)
+    # Stop the model to free up RAM (ollama specific)
+    if command_args[0] == "ollama"
+      puts "\e[2mStopping model to free RAM...\e[0m"
+      system("ollama", "stop", model)
+    end
     
     true
   rescue Errno::ENOENT
     spinner_active = false
     ram_monitor_active = false
     spinner_thread.join if spinner_thread.alive?
-    ram_monitor_thread.join if ram_monitor_thread.alive? rescue nil
-    puts "\e[2mError: ollama command not found. Please make sure ollama is installed and in your PATH.\e[0m"
+    ram_monitor_thread.join if ram_monitor_thread && ram_monitor_thread.alive? rescue nil
+    puts "\e[2mError: #{command_args[0]} command not found. Please make sure #{command_args[0]} is installed and in your PATH.\e[0m"
     puts 
     false
+  end
+
+  def call_ollama(model, prompt)
+    execute_command_with_formatting(["ollama", "run", "--hidethinking", model, prompt], model, prompt)
+  end
+
+  def call_claude(model, prompt)
+    execute_command_with_formatting(["claude", "-p", prompt], model, prompt)
   end
 end
