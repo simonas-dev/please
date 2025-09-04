@@ -12,8 +12,12 @@ def show_usage
       pls list                                     - List all available aliases
       pls help                                     - Show this help
     
+    Options:
+      -v                                           - Verbose mode (show input prompt)
+    
     Examples:
       pls lastCommitScope                          - Run the scope of impact analysis
+      pls -v lastCommitScope                       - Run with verbose output
       pls list                                     - Show all available prompt aliases
   USAGE
 end
@@ -25,15 +29,32 @@ end
 
 wrapper = OllamaWrapper.new
 
-case ARGV[0]
+# Parse flags
+verbose = false
+args_start = 0
+
+ARGV.each_with_index do |arg, index|
+  if arg == '-v'
+    verbose = true
+    args_start = index + 1
+    break
+  elsif !arg.start_with?('-')
+    args_start = index
+    break
+  end
+end
+
+remaining_args = ARGV[args_start..-1] || []
+
+case remaining_args[0]
 when 'list'
   wrapper.list_aliases
 else
   # Run the specified alias with any additional arguments
-  alias_name = ARGV[0]
-  additional_args = ARGV[1..-1] || []
+  alias_name = remaining_args[0]
+  additional_args = remaining_args[1..-1] || []
   
-  unless wrapper.run(alias_name, *additional_args)
+  unless wrapper.run(alias_name, verbose, *additional_args)
     exit 1
   end
 end

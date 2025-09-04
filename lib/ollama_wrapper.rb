@@ -56,7 +56,7 @@ class OllamaWrapper
     @prompts = load_default_prompts
   end
   
-  def run(alias_name, *args)
+  def run(alias_name, verbose = false, *args)
     prompt_config = @prompts[alias_name]
     unless prompt_config
       puts "Error: No prompt found for alias '#{alias_name}'"
@@ -82,9 +82,9 @@ class OllamaWrapper
     
     # Route to appropriate command based on model
     if claude_model?(model)
-      call_claude(model, expanded_prompt)
+      call_claude(model, expanded_prompt, verbose)
     else
-      call_ollama(model, expanded_prompt)
+      call_ollama(model, expanded_prompt, verbose)
     end
   end
   
@@ -215,7 +215,7 @@ class OllamaWrapper
     "N/A"
   end
 
-  def execute_command_with_formatting(command_args, model, prompt)
+  def execute_command_with_formatting(command_args, model, prompt, verbose = false)
     # Calculate and display token/character count
     char_count = prompt.length
     estimated_tokens = char_count / 4
@@ -223,6 +223,24 @@ class OllamaWrapper
     puts "\e[2mPrompt size: #{token_display} tokens (~#{char_count} chars)\e[0m"
     puts "\e[2mCalling #{command_args[0]} with model: #{model}\e[0m"
     puts
+    
+    # Print the input prompt with separator only if verbose mode is enabled
+    if verbose
+      puts "\e[2m─" * 60 + "\e[0m"
+      if prompt.empty?
+        puts "\e[91m[DEBUG: Empty prompt]\e[0m"
+      else
+        highlighted = highlight_markdown(prompt)
+        if highlighted.empty?
+          puts "\e[91m[DEBUG: Highlighting failed, showing raw:]\e[0m"
+          puts prompt
+        else
+          puts highlighted
+        end
+      end
+      puts "\e[2m─" * 60 + "\e[0m"
+      puts
+    end
     
     start_time = Time.now
     spinner_active = true
@@ -345,11 +363,11 @@ class OllamaWrapper
     false
   end
 
-  def call_ollama(model, prompt)
-    execute_command_with_formatting(["ollama", "run", "--hidethinking", model, prompt], model, prompt)
+  def call_ollama(model, prompt, verbose = false)
+    execute_command_with_formatting(["ollama", "run", "--hidethinking", model, prompt], model, prompt, verbose)
   end
 
-  def call_claude(model, prompt)
-    execute_command_with_formatting(["claude", "-p", prompt], model, prompt)
+  def call_claude(model, prompt, verbose = false)
+    execute_command_with_formatting(["claude", "-p", prompt], model, prompt, verbose)
   end
 end
