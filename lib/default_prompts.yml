@@ -31,4 +31,18 @@ lastCommitScope:
     ```
 
     $(git show)
-  description: "Generate QA scope of impact analysis from git diff"
+  description: "Generate release notes from git diff"
+releaseNotes:
+  model: "gemma3:4b"
+  prompt: |
+    Create product focused release notes from the log diff.
+
+    Use bullet point formatting.
+
+    List feature toggles that need to be enabled.
+
+    Don't process image. Don't read files.
+
+    A git diff below:
+
+  description: "Generate releas notes from git diff"
